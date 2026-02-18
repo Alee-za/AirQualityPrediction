@@ -1,0 +1,52 @@
+name: 🌤️ Hourly Weather & Pollutant Ingestion to Hopsworks
+
+on:
+  workflow_dispatch:       # Allows manual trigger from GitHub Actions tab
+  schedule:
+    - cron: "0 * * * *"    # ⏰ Runs every hour on the hour (UTC time)
+
+jobs:
+  ingest-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # 1️⃣ Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      # 3️⃣ Debug repository structure (optional)
+      - name: Debug workspace
+        run: |
+          echo "📂 Listing repo files..."
+          ls -R
+
+      # 4️⃣ Install dependencies
+      - name: Install dependencies
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo "📦 Installing dependencies..."
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install hopsworks pandas requests python-dotenv pyarrow
+
+      # 5️⃣ Run the ingestion script
+      - name: 🚀 Run Weather & Pollutant Ingestion
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+        run: |
+          echo "🌍 Starting weather and AQ ingestion..."
+          python open_metro_hopswork_pushed_v2.py
+          echo "✅ Data ingestion completed!"
+
+      # 6️⃣ Summarize
+      - name: ✅ Job Summary
+        run: |
+          echo "🎯 Weather & pollutant data ingestion completed at $(date)"
+          echo "Check your Hopsworks dashboard for materialization logs."
